@@ -4,7 +4,9 @@ DenStream.
 https://github.com/Waikato/moa/blob/master/moa/src/main/java/moa/clusterers/denstream/WithDBSCAN.java
 """
 import logging
-from typing import Iterable, Any
+from typing import Dict, List, Iterable, Any
+
+from py4j.java_gateway import JavaGateway
 
 from utils import setup_logger, setup_java_gateway
 
@@ -64,10 +66,11 @@ class DenStreamWithDBSCAN:
         self._lambda_ = lambda_
         self._processing_speed = processing_speed
 
-        self._gateway = setup_java_gateway(imports=_IMPORTS)
+        self._gateway: JavaGateway = setup_java_gateway(imports=_IMPORTS)
 
-        self._header = self._generate_header()
-        self._clusterer = self._initialize_clusterer()
+        self._header: Any = self._generate_header()
+        self._clusterer: Any = self._initialize_clusterer()
+        self._instances: List[Any] = []
 
     @property
     def window_range(self) -> float:
@@ -155,6 +158,17 @@ class DenStreamWithDBSCAN:
 
         return clusterer
 
+    def _create_instance(self, vector) -> Any:
+        """Create instance."""
+        instance = self._gateway.jvm.DenseInstance(self._dimensions)
+
+        for index, number in enumerate(vector):
+            instance.setValue(index, number)
+
+        instance.setDataset(self._header)
+
+        return instance
+
     def transform(self) -> None:
         """Transform."""
         raise NotImplementedError
@@ -166,14 +180,10 @@ class DenStreamWithDBSCAN:
         :param batch: An iterable of vectors.
         """
         for vector in batch:
-            instance = self._gateway.jvm.DenseInstance(self._dimensions)
-
-            for index, number in enumerate(vector):
-                instance.setValue(index, number)
-
-            instance.setDataset(self._header)
+            instance = self._create_instance(vector)
 
             self._clusterer.trainOnInstanceImpl(instance)
+            self._instances.append(instance)
 
     def fit(self, batch: Iterable[Iterable[float]]) -> None:
         """
@@ -182,3 +192,13 @@ class DenStreamWithDBSCAN:
         :param batch: An iterable of vectors.
         """
         self.partial_fit(batch)
+
+    def get_clustering_result(self) -> Dict[int, int]:
+        """
+        Get clustering result.
+
+        Result is in the form {
+            'point_index': cluster_index
+        }
+        """
+        return self._clusterer.getClusteringResult().classValues(self._instances)
