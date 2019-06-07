@@ -7,6 +7,7 @@ import logging
 from typing import Dict, List, Iterable, Any
 
 from py4j.java_gateway import JavaGateway
+from sklearn.base import BaseEstimator, ClusterMixin
 
 from utils import setup_logger, setup_java_gateway
 
@@ -28,7 +29,7 @@ _IMPORTS = [
 ]
 
 
-class DenStreamWithDBSCAN:
+class DenStreamWithDBSCAN(BaseEstimator, ClusterMixin):
     """DenStream using DBSCAN."""
 
     def __init__(self,
@@ -112,6 +113,11 @@ class DenStreamWithDBSCAN:
         """Get processing speed per time unit."""
         return self._processing_speed
 
+    @property
+    def labels_(self) -> List[int]:
+        """Get labels."""
+        return [*self.get_clustering_result().values()]
+
     def _generate_header(self):
         """
         Generate header.
@@ -175,25 +181,25 @@ class DenStreamWithDBSCAN:
         """Transform."""
         raise NotImplementedError
 
-    def partial_fit(self, batch: Iterable[Iterable[float]]) -> None:
+    def partial_fit(self, X: Iterable[Iterable[float]]) -> None:
         """
         Partial fit model.
 
-        :param batch: An iterable of vectors.
+        :param X: An iterable of vectors.
         """
-        for vector in batch:
+        for vector in X:
             instance = self._create_instance(vector)
 
             self._clusterer.trainOnInstanceImpl(instance)
             self._instances.append(instance)
 
-    def fit(self, batch: Iterable[Iterable[float]]) -> None:
+    def fit(self, X: Iterable[Iterable[float]]) -> None:
         """
         Partial fit model.
 
-        :param batch: An iterable of vectors.
+        :param X: An iterable of vectors.
         """
-        self.partial_fit(batch)
+        self.partial_fit(X)
 
     def get_clustering_result(self) -> Dict[int, int]:
         """
