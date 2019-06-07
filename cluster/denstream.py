@@ -201,6 +201,16 @@ class DenStreamWithDBSCAN(BaseEstimator, ClusterMixin):
         """
         self.partial_fit(X)
 
+    def fit_predict(self, X: Iterable[Iterable[float]], y=None) -> List[int]:
+        """
+        Partial fit model.
+
+        :param X: An iterable of vectors.
+        """
+        self.fit(X)
+
+        return self.labels_
+
     def get_clustering_result(self) -> Dict[int, int]:
         """
         Get clustering result.
