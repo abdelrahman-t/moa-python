@@ -52,4 +52,4 @@ _MOA_JARS = [
     'scalatest-maven-plugin-1.0-M2'
 ]
 
-CLASS_PATH = ':'.join([f'java/{jar}.jar' for jar in _MOA_JARS])
+_CLASS_PATH = ':'.join([f'java/{jar}.jar' for jar in _MOA_JARS])

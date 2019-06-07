@@ -4,7 +4,7 @@ from typing import List
 
 from py4j.java_gateway import GatewayParameters, JavaGateway, launch_gateway, java_import
 
-from dependencies import _MOA_JARS
+from dependencies import _CLASS_PATH
 
 
 def setup_logger(name: str, level) -> logging.Logger:
@@ -36,7 +36,7 @@ def setup_java_gateway(imports: List[str]):
 
     :param imports: List of fully qualified class paths to import.
     """
-    port = launch_gateway(classpath=_MOA_JARS, die_on_exit=True)
+    port = launch_gateway(classpath=_CLASS_PATH, die_on_exit=True)
 
     params = GatewayParameters(
         port=port,

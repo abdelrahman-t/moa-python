@@ -33,14 +33,14 @@ class DenStreamWithDBSCAN:
 
     def __init__(self,
                  dimensions: int,
-                 window_range: int,
-                 epsilon: float,
-                 beta: float,
-                 mu: float,
-                 number_intialization_points: int,
-                 offline_multiplier: float,
-                 lambda_: float,
-                 processing_speed: int) -> None:
+                 window_range: int = 1000,
+                 epsilon: float = 0.02,
+                 beta: float = 0.2,
+                 mu: float = 1.0,
+                 number_intialization_points: int = 1000,
+                 offline_multiplier: float = 2.0,
+                 lambda_: float = 0.25,
+                 processing_speed: int = 100) -> None:
         """
         Initialize clusterer.
 
@@ -160,7 +160,9 @@ class DenStreamWithDBSCAN:
 
     def _create_instance(self, vector) -> Any:
         """Create instance."""
-        instance = self._gateway.jvm.DenseInstance(self._dimensions)
+        instance = self._gateway.jvm.DenseInstance(
+            float(self._dimensions)
+        )
 
         for index, number in enumerate(vector):
             instance.setValue(index, number)
